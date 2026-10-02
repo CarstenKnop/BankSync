@@ -6,6 +6,9 @@ on:
     tags: ["v*"]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build-test:
     runs-on: ubuntu-latest
@@ -40,7 +43,7 @@ jobs:
       # To publish to nuget.org, add a NUGET_API_KEY secret and uncomment:
       # - run: dotnet nuget push out/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
-  docs:
+  docs-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -48,4 +51,23 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install mkdocs-material
-      - run: mkdocs build --strict
+      - run: mkdocs build --strict --site-dir public
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  # Publishes the documentation site to GitHub Pages on every push to main.
+  # Repository settings -> Pages -> Source must be set to "GitHub Actions".
+  docs-deploy:
+    needs: [docs-build, build-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

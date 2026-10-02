@@ -198,11 +198,13 @@ strict mode and publishes `public/` on the default branch. The site
 appears at `https://<namespace>.<pages-domain>/<project>/`.
 
 **GitHub**: [.github/workflows/ci.yml](.github/workflows/ci.yml) builds and
-tests on every push and pull request, checks the docs build, and packs a
-NuGet package when a `v*` tag is pushed. Publishing to nuget.org needs a
-`NUGET_API_KEY` secret and uncommenting one line in the workflow. To host
-the docs on GitHub Pages, add a job that runs `mkdocs gh-deploy`, or point
-Pages at a branch built by the docs job.
+tests on every push and pull request, builds the docs in strict mode, and
+publishes them to GitHub Pages on every push to `main`. One-time setup in
+the repository: **Settings → Pages → Build and deployment → Source:
+GitHub Actions**. The site then appears at
+`https://<user>.github.io/<repository>/`. A `v*` tag additionally packs a
+NuGet package; publishing to nuget.org needs a `NUGET_API_KEY` secret and
+uncommenting one line in the workflow.
 
 ## Facts the design rests on
 

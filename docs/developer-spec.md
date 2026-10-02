@@ -118,7 +118,7 @@ sensitive is baked into the image.
 
 | Key | Required | Example | Notes |
 |---|---|---|---|
-| `EB__ApplicationId` | yes | `cf589be3-3755-465b-a8df-a90a16a31403` | From the Enable Banking control panel |
+| `EB__ApplicationId` | yes | `00000000-0000-0000-0000-000000000000` | From the Enable Banking control panel |
 | `EB__PrivateKeyPath` | yes | `/run/secrets/eb_private_key` | PEM, PKCS#1 or PKCS#8, RSA 2048 or 4096. Read with `RSA.ImportFromPem`. |
 | `EB__BaseUrl` | no | `https://api.enablebanking.com` | Default shown. `api.tilisy.com` is deprecated and must not be used. |
 | `EB__RedirectUrl` | yes | `https://nordea.home.example/callback` | Must match the control panel registration exactly |
@@ -488,7 +488,7 @@ networks:
 
 ### 12.3 Reverse proxy
 
-Any of Traefik, Caddy, nginx or the Synology reverse proxy. Requirements:
+Any of Traefik, Caddy, nginx or the reverse proxy built into a NAS. Requirements:
 TLS with a certificate the phone trusts, forward `X-Forwarded-For` and
 `X-Forwarded-Proto`, proxy WebSockets if Blazor Server is used, and a
 request body limit large enough for CSV uploads (10 MB).
