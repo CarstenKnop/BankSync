@@ -1,0 +1,28 @@
+# Secrets: never commit keys or certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+config.local.json
+.env
+.env.*
+
+# MkDocs / Pages output
+site/
+public/
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# Python
+.venv/
+__pycache__/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+!.env.example

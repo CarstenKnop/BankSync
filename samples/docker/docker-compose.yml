@@ -1,0 +1,50 @@
+# Skeleton compose file for the owner's server.
+# Copy .env.example to .env and fill in the values; put the private key at ./secrets/eb_private_key.pem (chmod 600).
+services:
+  nordea-app:
+    image: registry.example/nordea-app:1.0.0
+    container_name: nordea-app
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      EB__ApplicationId: ${EB_APPLICATION_ID}
+      EB__PrivateKeyPath: /run/secrets/eb_private_key
+      EB__RedirectUrl: ${APP_PUBLIC_BASE_URL}/callback
+      EB__Aspsp__Name: Nordea
+      EB__Aspsp__Country: DK
+      EB__PsuType: personal
+      EB__ConsentDays: "180"
+      EB__Language: da
+      App__PublicBaseUrl: ${APP_PUBLIC_BASE_URL}
+      App__Auth__Username: ${APP_USERNAME}
+      App__Auth__PasswordHash: ${APP_PASSWORD_HASH}
+      Sync__Slots: "06:30,11:30,16:30,21:30"
+      Sync__TimeZone: Europe/Copenhagen
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      TZ: Europe/Copenhagen
+    secrets:
+      - eb_private_key
+    volumes:
+      - nordea-data:/data
+    networks:
+      - proxy
+    # Expose only to the reverse proxy network. If you have no proxy network yet, replace
+    # the networks block with:  ports: ["127.0.0.1:8080:8080"]  and terminate TLS elsewhere.
+
+secrets:
+  eb_private_key:
+    file: ./secrets/eb_private_key.pem
+
+volumes:
+  nordea-data:
+
+networks:
+  proxy:
+    external: true

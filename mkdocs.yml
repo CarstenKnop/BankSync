@@ -1,0 +1,48 @@
+site_name: Nordea transactions via Enable Banking
+site_description: Whitepaper and developer specification for a self-hosted C# app that reads Nordea Denmark transactions through the Enable Banking API.
+site_author: Carsten Knop
+use_directory_urls: true
+
+nav:
+  - Overview: index.md
+  - Whitepaper: whitepaper.md
+  - Developer specification: developer-spec.md
+  - API reference (Enable Banking): api-reference.md
+  - Owner setup checklist: setup-checklist.md
+  - Privacy and risks: privacy-and-risks.md
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.top
+    - toc.integrate
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight
+  - pymdownx.tabbed:
+      alternate_style: true
