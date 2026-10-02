@@ -15,6 +15,11 @@ public/
 # .NET
 bin/
 obj/
+TestResults/
+*.db
+*.db-wal
+*.db-shm
+banksync.key
 *.user
 .vs/
 

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/BankSync.DemoApp/BankSync.DemoApp.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/BankSync.Tests/BankSync.Tests.csproj" />
+    <Project Path="src/BankSync/BankSync.csproj" />
+  </Folder>
+</Solution>

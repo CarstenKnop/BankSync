@@ -1,8 +1,21 @@
 # Builds the documentation site and publishes it with GitLab Pages.
 # Requires a runner that can run Docker images.
 stages:
+  - test
   - build
   - deploy
+
+test-library:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  script:
+    - dotnet restore BankSync.slnx
+    - dotnet build BankSync.slnx --no-restore -c Release
+    - dotnet test BankSync.slnx --no-build -c Release --logger "junit;LogFilePath=TestResults/junit.xml" || dotnet test BankSync.slnx --no-build -c Release
+  artifacts:
+    when: always
+    reports:
+      junit: "**/TestResults/*.xml"
 
 build-docs:
   stage: build

@@ -6,6 +6,13 @@
 | Status | Draft for developer review |
 | Target | C# / ASP.NET Core web app, mobile-first UI, one Docker container on the owner's private server |
 | Depends on | [Whitepaper](whitepaper.md) for background, [API reference](api-reference.md) for endpoint details, [Setup checklist](setup-checklist.md) for what the owner does first |
+| Implemented by | The **BankSync** library in `src/BankSync` covers sections 5 to 9 of this document. The app developer builds sections 10 to 12 on top of `IBankSync`. See the [library guide](library.md). |
+
+!!! note "Division of work"
+    Sections 5 to 9 (configuration, Enable Banking client, consent flow, sync engine, data model) are
+    implemented by the BankSync library. They remain here as the specification the library follows and
+    as the reference for anyone who wants to verify or extend it. The app developer's work starts at
+    section 10 (web UI) and continues with 11 (security) and 12 (Docker).
 
 The word **must** marks a requirement. **Should** marks the preferred way
 when there is a choice. Anything else is guidance.
@@ -530,8 +537,8 @@ The developer should get answers before phase 2.
 
 ## Appendix A: minimal flow in C#
 
-A compilable console version of the client is in `samples/csharp/`. The
-essential calls, with the exact JSON names:
+The library wraps these calls; `samples/BankSync.DemoApp` shows the
+host-side usage. The essential calls, with the exact JSON names:
 
 ```csharp
 // 1. Start authorisation

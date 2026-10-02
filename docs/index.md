@@ -24,6 +24,7 @@ terms.
 |---|---|---|
 | [Whitepaper](whitepaper.md) | Owner, developer | Options, regulation, how the flow works, constraints and their consequences |
 | [Developer specification](developer-spec.md) | Developer | Functional and technical specification of the C# web app and its Docker deployment |
+| [Library guide](library.md) | Developer | How to use the BankSync library that implements the Enable Banking side, quota, backfill and storage |
 | [API reference](api-reference.md) | Developer | The Enable Banking endpoints, headers, fields and error codes the app uses |
 | [Owner setup checklist](setup-checklist.md) | Owner | The steps in the Enable Banking control panel that only the owner can do |
 | [Privacy and risks](privacy-and-risks.md) | Owner, developer | Short summary of where data flows, what can go wrong and how to limit it |

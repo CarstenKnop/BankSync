@@ -7,6 +7,7 @@ nav:
   - Overview: index.md
   - Whitepaper: whitepaper.md
   - Developer specification: developer-spec.md
+  - Library guide (BankSync): library.md
   - API reference (Enable Banking): api-reference.md
   - Owner setup checklist: setup-checklist.md
   - Privacy and risks: privacy-and-risks.md
