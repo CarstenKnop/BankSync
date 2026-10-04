@@ -225,18 +225,10 @@ network access.
 
 ## Trying it against the sandbox
 
-1. Register a **sandbox** application at Enable Banking, download the key.
-2. `cd samples/BankSync.DemoApp`, set user secrets:
-
-```bash
-dotnet user-secrets set BankSync:ApplicationId <sandbox app id>
-dotnet user-secrets set BankSync:PrivateKeyPath C:\path\to\sandbox.pem
-```
-
-3. Register `https://localhost:5001/callback` as a redirect URL for the
-   sandbox app, then `dotnet run` and open <https://localhost:5001/>.
-4. Click **Connect**, log in to the Mock ASPSP (credentials in Enable
-   Banking's "Sandbox credentials" docs), and watch the transactions appear.
+The step-by-step manual, including key creation, application registration,
+user secrets that keep everything outside the repository, the first
+consent and troubleshooting, is in
+[samples/BankSync.DemoApp/README.md](https://github.com/CarstenKnop/BankSync/blob/main/samples/BankSync.DemoApp/README.md).
 
 ## Roadmap
 
