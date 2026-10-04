@@ -131,7 +131,9 @@ render.
 ```csharp
 var status   = await bank.GetConsentStatusAsync();         // State, DaysLeft, NeedsRenewal, LastSuccessfulSync, BackfillComplete
 var accounts = await bank.GetAccountsAsync();              // Id, Iban, MaskedIban, Name, DisplayName, Currency, Earliest/LatestTransactionDate
-var balances = await bank.GetBalancesAsync(accounts[0].Id); // latest snapshot per balance type (CLBD = booked, ITAV = available)
+var balances = await bank.GetBalancesAsync(accounts[0].Id); // latest snapshot per balance type
+var booked    = balances.Booked();     // CLBD, or ITBD as Nordea reports it
+var available = balances.Available();  // ITAV, or CLAV / FWAV / OPAV
 var page     = await bank.GetTransactionsAsync(new TransactionQuery
 {
     AccountId = accounts[0].Id, From = new DateOnly(2026, 1, 1), Text = "netto", Skip = 0, Take = 50

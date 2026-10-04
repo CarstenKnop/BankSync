@@ -29,7 +29,8 @@ var page = await bank.GetTransactionsAsync(new TransactionQuery { AccountId = ac
 - [Building and testing](#building-and-testing)
 - [Publishing on GitLab Pages or GitHub](#publishing-on-gitlab-pages-or-github)
 - [Facts the design rests on](#facts-the-design-rests-on)
-- [Things to confirm in the sandbox](#things-to-confirm-in-the-sandbox)
+- [Confirmed against the sandbox](#confirmed-against-the-enable-banking-sandbox-nordea-dk-2026-10-04)
+- [Still to confirm](#still-to-confirm)
 - [Next steps](#next-steps)
 - [Security notes for this repository](#security-notes-for-this-repository)
 - [Contributing and conventions](#contributing-and-conventions)
@@ -222,19 +223,33 @@ uncommenting one line in the workflow.
 | Enable Banking does not store account data | SQLite on your server is the only persistent copy, so protect it and back it up encrypted |
 | Read-only: no payment initiation without a PISP licence | The library has no payment calls at all |
 
-## Things to confirm in the sandbox
+## Confirmed against the Enable Banking sandbox (Nordea DK, 2026-10-04)
 
-The library and documents are based on Enable Banking's public reference
-and FAQ. A few details can only be confirmed against live responses:
+A full consent, initial load and refresh ran against the real sandbox with
+three invented accounts and about 400 transactions. What the real responses
+showed:
 
-- Which of `entry_reference` and `transaction_id` Nordea fills, and
-  whether the amount sign already reflects `credit_debit_indicator`. The
-  dedup and sign rules cover all cases, but the first real fetch should be
-  checked.
-- The exact error code strings for an expired session. The library
-  matches any 4xx whose code contains `EXPIRED` or `SESSION_CLOSED`.
+| Question | Answer |
+|---|---|
+| Which reference field does Nordea fill? | `entry_reference`, a UUID. `transaction_id` is absent. The library keys on the entry reference. |
+| Is the amount sign reliable? | Amounts arrive as positive strings with `credit_debit_indicator` `CRDT` or `DBIT`. The library applies the sign: debits negative, credits positive. |
+| Counterparty names? | Absent in the sandbox data. The merchant is inside the remittance text, so apps should show the text when the counterparty is empty. |
+| Bank transaction code? | Empty or only a short description such as `BGS`. The library stores the description when there is no code. |
+| Balance types? | `ITBD` booked, `ITAV` available, `VALU` value-dated. There is no `CLBD`. Use `Booked()` and `Available()` on the balance list instead of testing for a type. |
+| Running balance per transaction? | `balance_after_transaction` is absent. |
+| Joint accounts? | The account name holds both owners separated by a semicolon. |
+| Text encoding? | Danish characters arrive and are stored correctly. |
+
+## Still to confirm
+
+These need the production API or a deliberately forced error:
+
+- The exact error code when a session has expired. The library matches any
+  4xx whose code contains `EXPIRED` or `SESSION_CLOSED`.
 - Whether each page of a paginated fetch counts separately against the
-  quota. The library assumes yes.
+  daily quota. The library assumes yes.
+- Whether production Nordea data differs from the sandbox, for example
+  whether real transactions carry counterparty names and transaction codes.
 - The column names of Nordea's CSV export, for the planned fallback importer.
 
 ## Next steps
@@ -279,6 +294,7 @@ and FAQ. A few details can only be confirmed against live responses:
 |---|---|
 | 2026-10-02 | First version of all documents, Pages pipeline and local serve script. |
 | 2026-10-02 | BankSync library 0.1.0 with tests and demo app; MIT licence; GitHub Actions workflow. |
+| 2026-10-04 | First run against the Enable Banking sandbox. Fixed the scheduler missing the initial load after a slot had fired, config slots doubling the defaults, the fresh-install Connect button, booked-balance detection for Nordea. |
 
 ## Licence
 

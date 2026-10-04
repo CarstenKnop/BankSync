@@ -61,6 +61,27 @@ public sealed record BalanceInfo(
     DateOnly? ReferenceDate,
     DateTimeOffset FetchedAt);
 
+/// <summary>
+/// Banks label the same balance differently. Nordea reports the booked balance as ITBD and the available
+/// balance as ITAV; other banks use CLBD and CLAV. These helpers pick the right one so apps do not have to know.
+/// </summary>
+public static class BalanceInfoExtensions
+{
+    private static readonly string[] BookedOrder = ["CLBD", "ITBD", "OPBD", "PRCD"];
+    private static readonly string[] AvailableOrder = ["ITAV", "CLAV", "FWAV", "OPAV"];
+
+    public static BalanceInfo? Booked(this IEnumerable<BalanceInfo> balances) => Pick(balances, BookedOrder);
+    public static BalanceInfo? Available(this IEnumerable<BalanceInfo> balances) => Pick(balances, AvailableOrder);
+
+    private static BalanceInfo? Pick(IEnumerable<BalanceInfo> balances, string[] order)
+    {
+        var list = balances as IReadOnlyList<BalanceInfo> ?? balances.ToList();
+        foreach (var type in order)
+            if (list.FirstOrDefault(b => b.BalanceType == type) is { } found) return found;
+        return null;
+    }
+}
+
 public sealed record TransactionInfo(
     long Id,
     int AccountId,

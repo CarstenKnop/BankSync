@@ -48,6 +48,10 @@ internal sealed class SyncScheduler(
             await CatchUpAsync(stoppingToken);
             await RunPendingBackfillAsync(null, stoppingToken);
 
+            // The queue allows one reader, so there must be at most one outstanding wait on it. It is kept across
+            // loop iterations: a slot firing must not start a second wait while the first is still pending.
+            Task<bool>? waitForItem = null;
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 var now = time.GetUtcNow();
@@ -55,14 +59,21 @@ internal sealed class SyncScheduler(
                 var delay = next is null ? TimeSpan.FromHours(1) : next.Value - now;
                 if (delay < TimeSpan.Zero) delay = TimeSpan.Zero;
 
-                var waitForItem = queue.Reader.WaitToReadAsync(stoppingToken).AsTask();
-                var waitForSlot = Task.Delay(delay, time, stoppingToken);
+                waitForItem ??= queue.Reader.WaitToReadAsync(stoppingToken).AsTask();
+                using var delayCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+                var waitForSlot = Task.Delay(delay, time, delayCts.Token);
                 var completed = await Task.WhenAny(waitForItem, waitForSlot);
 
-                if (completed == waitForItem && await waitForItem)
+                if (completed == waitForItem)
                 {
-                    while (queue.Reader.TryRead(out var item))
-                        await ProcessAsync(item, stoppingToken);
+                    await delayCts.CancelAsync();   // release the timer of the slot wait that lost
+                    var hasItems = await waitForItem;
+                    waitForItem = null;
+                    if (hasItems)
+                    {
+                        while (queue.Reader.TryRead(out var item))
+                            await ProcessAsync(item, stoppingToken);
+                    }
                     continue;
                 }
 

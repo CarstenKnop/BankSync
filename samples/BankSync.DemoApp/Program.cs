@@ -34,8 +34,9 @@ app.MapGet("/", async (IBankSync bank) =>
     foreach (var a in await bank.GetAccountsAsync())
     {
         var balances = await bank.GetBalancesAsync(a.Id);
-        var booked = balances.FirstOrDefault(b => b.BalanceType == "CLBD") ?? balances.FirstOrDefault();
-        html.Append($"<h2>{WebUtility.HtmlEncode(a.DisplayName ?? a.Name ?? a.MaskedIban)}</h2><p>{a.MaskedIban} · {booked?.Amount.ToString("N2")} {booked?.Currency} · {a.EarliestTransactionDate}…{a.LatestTransactionDate}</p>");
+        var booked = balances.Booked();
+        var available = balances.Available();
+        html.Append($"<h2>{WebUtility.HtmlEncode(a.DisplayName ?? a.Name ?? a.MaskedIban)}</h2><p>{a.MaskedIban}<br>Booked: {booked?.Amount.ToString("N2") ?? "n/a"} {booked?.Currency} · Available: {available?.Amount.ToString("N2") ?? "n/a"} {available?.Currency}<br>History {a.EarliestTransactionDate}…{a.LatestTransactionDate}</p>");
         var page = await bank.GetTransactionsAsync(new TransactionQuery { AccountId = a.Id, Take = 20 });
         html.Append("<table style='width:100%;border-collapse:collapse'>");
         foreach (var t in page.Items)

@@ -167,8 +167,9 @@ Response (`HalBalances`):
 ```
 
 `balance_type` values: `CLAV`, `CLBD`, `FWAV`, `INFO`, `ITAV`, `ITBD`,
-`OPAV`, `OPBD`, `OTHR`, `PRCD`, `VALU`, `XPCD`. Show `CLBD` (closing
-booked) as "balance" and `ITAV`/`CLAV` as "available" when present.
+`OPAV`, `OPBD`, `OTHR`, `PRCD`, `VALU`, `XPCD`. Banks differ: **Nordea
+returns `ITBD` (booked), `ITAV` (available) and `VALU`, and no `CLBD`.**
+The BankSync library hides this behind `Booked()` and `Available()`.
 Amounts are strings; parse with `InvariantCulture`.
 
 ### `GET /accounts/{uid}/transactions`

@@ -51,7 +51,7 @@ internal static partial class TransactionMapper
             CounterpartyAccount = Clean(counterpartyAccount),
             Text = Clean(text),
             TextNormalized = Normalize(text),
-            BankTransactionCode = tx.BankTransactionCode is { } c ? Clean(string.Join("/", new[] { c.Code, c.SubCode }.Where(s => !string.IsNullOrEmpty(s)))) : null,
+            BankTransactionCode = BankCode(tx.BankTransactionCode),
             BalanceAfter = tx.BalanceAfterTransaction?.Value is { } b ? ParseAmount(b) : null,
             MerchantCategoryCode = Clean(tx.MerchantCategoryCode),
             RawJson = JsonSerializer.Serialize(tx, RawJson),
@@ -103,6 +103,14 @@ internal static partial class TransactionMapper
     {
         if (string.IsNullOrWhiteSpace(text)) return null;
         return Whitespace().Replace(text, " ").Trim().ToUpperInvariant();
+    }
+
+    /// <summary>"PMNT/CCRD" when the bank sends codes; otherwise its description (Nordea sends only "BGS" style descriptions).</summary>
+    internal static string? BankCode(BankTransactionCode? c)
+    {
+        if (c is null) return null;
+        var codes = string.Join("/", new[] { c.Code, c.SubCode }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        return Clean(codes.Length > 0 ? codes : c.Description);
     }
 
     private static string? Identification(AccountIdentification? id)

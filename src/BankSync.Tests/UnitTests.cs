@@ -78,6 +78,37 @@ public class TransactionMapperTests
     }
 }
 
+public class BalanceAndCodeTests
+{
+    private static BalanceInfo B(string type, decimal amount) => new(1, type, null, amount, "DKK", null, DateTimeOffset.UnixEpoch);
+
+    [Fact]
+    public void Nordea_labels_are_recognised()
+    {
+        var nordea = new[] { B("ITAV", 100m), B("ITBD", 90m), B("VALU", 90m) };
+        Assert.Equal(90m, nordea.Booked()!.Amount);
+        Assert.Equal(100m, nordea.Available()!.Amount);
+    }
+
+    [Fact]
+    public void Standard_labels_win_and_missing_types_give_null()
+    {
+        var other = new[] { B("CLAV", 50m), B("CLBD", 40m), B("ITBD", 99m) };
+        Assert.Equal(40m, other.Booked()!.Amount);   // CLBD preferred over ITBD
+        Assert.Equal(50m, other.Available()!.Amount);
+        Assert.Null(new[] { B("VALU", 1m) }.Booked());
+    }
+
+    [Fact]
+    public void Bank_transaction_code_falls_back_to_description()
+    {
+        Assert.Equal("PMNT/CCRD", TransactionMapper.BankCode(new BankTransactionCode("PMNT", "CCRD", "Card")));
+        Assert.Equal("BGS", TransactionMapper.BankCode(new BankTransactionCode(null, null, "BGS")));
+        Assert.Null(TransactionMapper.BankCode(new BankTransactionCode(null, null, null)));
+        Assert.Null(TransactionMapper.BankCode(null));
+    }
+}
+
 public class SlotCalculatorTests
 {
     private static SlotCalculator Calc(params string[] slots) => new(Options.Create(new BankSyncOptions { SyncSlots = slots, TimeZone = "Europe/Copenhagen" }));

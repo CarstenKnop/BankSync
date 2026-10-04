@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace BankSync.Tests;
@@ -132,6 +133,108 @@ public class ConsentFlowTests
         Assert.True(status.NeedsRenewal);
         host.Clock.Advance(TimeSpan.FromDays(11));
         Assert.Equal(ConsentState.Expired, (await host.Bank.GetConsentStatusAsync()).State);
+    }
+}
+
+public class SchedulerTests
+{
+    private static async Task<List<Microsoft.Extensions.Hosting.IHostedService>> StartHostedAsync(TestHost host)
+    {
+        var services = host.Services.GetServices<Microsoft.Extensions.Hosting.IHostedService>().ToList();
+        foreach (var s in services) await s.StartAsync(CancellationToken.None);
+        return services;
+    }
+
+    private static async Task StopHostedAsync(IEnumerable<Microsoft.Extensions.Hosting.IHostedService> services)
+    {
+        foreach (var s in services) await s.StopAsync(CancellationToken.None);
+    }
+
+    private static async Task<bool> WaitUntilAsync(Func<Task<bool>> condition, int seconds = 10)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(seconds);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (await condition()) return true;
+            await Task.Delay(50);
+        }
+        return false;
+    }
+
+    [Fact]
+    public async Task Completing_consent_loads_data_through_the_scheduler_without_any_manual_refresh()
+    {
+        using var host = new TestHost(o => o.EnableScheduler = true);
+        host.Fake.Transactions.Add(new("er-1", "BOOK", host.Today.AddDays(-1), -10m, "COFFEE"));
+        host.Fake.Transactions.Add(new("er-2", "BOOK", host.Today.AddDays(-400), -20m, "OLD"));
+        var hosted = await StartHostedAsync(host);
+        try
+        {
+            await host.ConnectAsync();   // returns before the background work has necessarily finished
+
+            var loaded = await WaitUntilAsync(async () =>
+                (await host.Bank.GetTransactionsAsync(new TransactionQuery())).Total == 2
+                && (await host.Bank.GetConsentStatusAsync()).BackfillComplete);
+            Assert.True(loaded, "The queued initial load never ran or did not finish");
+            Assert.NotEmpty(await host.Bank.GetBalancesAsync((await host.Bank.GetAccountsAsync()).Single().Id));
+        }
+        finally { await StopHostedAsync(hosted); }
+    }
+
+    [Fact]
+    public async Task A_second_consent_is_also_loaded_after_the_scheduler_has_already_handled_one_item()
+    {
+        using var host = new TestHost(o => o.EnableScheduler = true);
+        host.Fake.Transactions.Add(new("er-1", "BOOK", host.Today.AddDays(-1), -10m, "COFFEE"));
+        var hosted = await StartHostedAsync(host);
+        try
+        {
+            await host.ConnectAsync();
+            Assert.True(await WaitUntilAsync(async () => (await host.Bank.GetConsentStatusAsync()).BackfillComplete));
+
+            host.Fake.Transactions.Add(new("er-2", "BOOK", host.Today.AddDays(-2), -30m, "SECOND"));
+            host.Fake.AccountUid = "acc-1-renewed";
+            await host.ConnectAsync();
+
+            Assert.True(await WaitUntilAsync(async () =>
+                (await host.Bank.GetTransactionsAsync(new TransactionQuery())).Total == 2), "The renewal's initial load did not run");
+        }
+        finally { await StopHostedAsync(hosted); }
+    }
+}
+
+public class SchedulerAfterSlotTests
+{
+    [Fact]
+    public async Task Consent_completed_after_a_daily_slot_has_fired_is_still_loaded()
+    {
+        using var host = new TestHost(o => o.EnableScheduler = true);
+        host.Fake.Transactions.Add(new("er-1", "BOOK", host.Today.AddDays(-1), -10m, "COFFEE"));
+        var hosted = host.Services.GetServices<Microsoft.Extensions.Hosting.IHostedService>().ToList();
+        foreach (var s in hosted) await s.StartAsync(CancellationToken.None);
+        try
+        {
+            // Let the scheduler start waiting, then move the clock past two slots so the loop iterates.
+            await Task.Delay(300);
+            for (var i = 0; i < 3; i++)
+            {
+                host.Clock.Advance(TimeSpan.FromHours(6));
+                await Task.Delay(300);
+            }
+            Assert.Contains(await host.Bank.GetSyncHistoryAsync(), r => r.Kind == SyncKind.Scheduled);   // a slot really ran
+
+            await host.ConnectAsync();
+
+            var deadline = DateTime.UtcNow.AddSeconds(10);
+            var loaded = false;
+            while (DateTime.UtcNow < deadline && !loaded)
+            {
+                loaded = (await host.Bank.GetTransactionsAsync(new TransactionQuery())).Total == 1;
+                if (!loaded) await Task.Delay(50);
+            }
+            Assert.True(loaded, "After a slot had fired, the queued initial load was never picked up");
+        }
+        finally { foreach (var s in hosted) await s.StopAsync(CancellationToken.None); }
     }
 }
 
