@@ -13,7 +13,7 @@ internal sealed class SlotCalculator
     {
         var o = options.Value;
         _tz = TimeZoneInfo.FindSystemTimeZoneById(o.TimeZone);
-        _slots = o.SyncSlots.Select(s => TimeOnly.ParseExact(s, "HH:mm")).OrderBy(t => t).ToArray();
+        _slots = o.EffectiveSyncSlots.Select(s => TimeOnly.ParseExact(s, "HH:mm")).OrderBy(t => t).ToArray();
         _maxJitter = o.MaxSlotJitter;
     }
 

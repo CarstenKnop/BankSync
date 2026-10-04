@@ -34,7 +34,7 @@ internal sealed class ConsentService(
         var pending = await db.PendingAuthorizations.AnyAsync(p => p.ValidUntilUtc > now, ct);
 
         if (consent is null)
-            return new ConsentStatus(pending ? ConsentState.Pending : ConsentState.None, null, null, false, null, 0, null, false, null);
+            return new ConsentStatus(pending ? ConsentState.Pending : ConsentState.None, null, null, NeedsRenewal: !pending, null, 0, null, false, null);
 
         var state = consent.Status;
         if (state is ConsentState.Active or ConsentState.Expiring)

@@ -6,6 +6,16 @@ namespace BankSync.Tests;
 public class ConsentFlowTests
 {
     [Fact]
+    public async Task Fresh_install_reports_none_and_asks_for_a_connection()
+    {
+        using var host = new TestHost();
+        var status = await host.Bank.GetConsentStatusAsync();
+        Assert.Equal(ConsentState.None, status.State);
+        Assert.True(status.NeedsRenewal);   // the UI shows "Connect" when this is true
+        Assert.Equal(0, status.AccountCount);
+    }
+
+    [Fact]
     public async Task Begin_consent_returns_bank_url_and_requests_180_days()
     {
         using var host = new TestHost();
@@ -34,7 +44,7 @@ public class ConsentFlowTests
         Assert.Equal(ConsentState.Active, status.State);
         Assert.Equal(1, status.AccountCount);
         Assert.True(status.BackfillComplete);
-        Assert.Equal(179, status.DaysLeft);
+        Assert.Equal(180, status.DaysLeft);   // the fake bank grants 180 days from the frozen test clock
 
         var accounts = await host.Bank.GetAccountsAsync();
         var account = Assert.Single(accounts);

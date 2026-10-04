@@ -114,6 +114,39 @@ public class SlotCalculatorTests
     }
 }
 
+public class OptionsBindingTests
+{
+    private static BankSyncOptions Bind(Dictionary<string, string?> values)
+    {
+        var config = Microsoft.Extensions.Configuration.MemoryConfigurationBuilderExtensions.AddInMemoryCollection(
+            new Microsoft.Extensions.Configuration.ConfigurationBuilder(), values).Build();
+        var o = new BankSyncOptions();
+        Microsoft.Extensions.Configuration.ConfigurationBinder.Bind(config.GetSection(BankSyncOptions.SectionName), o);
+        return o;
+    }
+
+    [Fact]
+    public void Slots_from_configuration_replace_the_defaults_instead_of_adding_to_them()
+    {
+        var o = Bind(new()
+        {
+            ["BankSync:SyncSlots:0"] = "06:30", ["BankSync:SyncSlots:1"] = "11:30",
+            ["BankSync:SyncSlots:2"] = "16:30", ["BankSync:SyncSlots:3"] = "21:30",
+        });
+
+        Assert.Equal(["06:30", "11:30", "16:30", "21:30"], o.EffectiveSyncSlots);
+        o.ApplicationId = "a"; o.PrivateKeyPem = "x"; o.RedirectUrl = "https://x";
+        o.Validate();   // must not throw: four configured slots are four slots
+    }
+
+    [Fact]
+    public void Fewer_configured_slots_are_honoured_and_missing_configuration_uses_defaults()
+    {
+        Assert.Equal(["08:00", "20:00"], Bind(new() { ["BankSync:SyncSlots:0"] = "08:00", ["BankSync:SyncSlots:1"] = "20:00" }).EffectiveSyncSlots);
+        Assert.Equal(["06:30", "11:30", "16:30", "21:30"], Bind(new() { ["BankSync:ApplicationId"] = "a" }).EffectiveSyncSlots);
+    }
+}
+
 public class SecretProtectorTests
 {
     [Fact]

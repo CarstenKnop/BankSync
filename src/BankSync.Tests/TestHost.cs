@@ -22,6 +22,7 @@ public sealed class TestHost : IDisposable
         Directory = Path.Combine(Path.GetTempPath(), "banksync-tests", Guid.NewGuid().ToString("N"));
         System.IO.Directory.CreateDirectory(Directory);
         Clock = new FakeTimeProvider(now ?? new DateTimeOffset(2026, 10, 2, 8, 0, 0, TimeSpan.FromHours(2)));
+        Fake.Now = Clock.GetUtcNow;
 
         var services = new ServiceCollection();
         services.AddLogging(b => b.SetMinimumLevel(LogLevel.Debug));

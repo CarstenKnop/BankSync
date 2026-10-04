@@ -75,7 +75,7 @@ missing.
 | `DatabasePath` | `banksync.db` | SQLite file; directory is created |
 | `SecretKeyPath` | next to the database | AES key for the session id |
 | `EnableScheduler` | true | Set false when the host drives `RunScheduledSyncAsync` itself |
-| `SyncSlots` | `06:30,11:30,16:30,21:30` | At most `MaxUnattendedCallsPerDay` entries |
+| `SyncSlots` | unset = `06:30, 11:30, 16:30, 21:30` | At most `MaxUnattendedCallsPerDay` entries. Setting it **replaces** the defaults. |
 | `TimeZone` | `Europe/Copenhagen` | Slot times and quota day boundary |
 | `MaxUnattendedCallsPerDay` | 4 | PSD2 limit |
 | `OverlapDays` | 5 | Incremental window starts this far before the last booked date |

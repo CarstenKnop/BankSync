@@ -21,6 +21,9 @@ public sealed partial class FakeEnableBanking : HttpMessageHandler
     public int PageSize { get; set; } = int.MaxValue;
     public decimal Balance { get; set; } = 1000m;
 
+    /// <summary>The test's clock. Set by TestHost so the fake bank and the library agree on "now" (never use the real clock here).</summary>
+    public Func<DateTimeOffset> Now { get; set; } = () => throw new InvalidOperationException("Set FakeEnableBanking.Now to the test clock.");
+
     /// <summary>Return a response to short-circuit a request, or null to use the default behaviour.</summary>
     public Func<HttpRequestMessage, HttpResponseMessage?>? Override { get; set; }
 
@@ -60,7 +63,7 @@ public sealed partial class FakeEnableBanking : HttpMessageHandler
 
         if (method == HttpMethod.Post && path == "sessions")
         {
-            var validUntil = (SessionValidUntil ?? DateTimeOffset.UtcNow.AddDays(180)).ToString("o");
+            var validUntil = (SessionValidUntil ?? Now().AddDays(180)).ToString("o");
             return Json(HttpStatusCode.OK, $$$"""
             {"session_id":"sess-1","psu_type":"personal","aspsp":{"name":"Nordea","country":"DK"},
              "access":{"valid_until":"{{{validUntil}}}","balances":true,"transactions":true},

@@ -61,8 +61,16 @@ public sealed class BankSyncOptions
     /// <summary>Run the background scheduler. Set false in tests or if the host triggers syncs itself.</summary>
     public bool EnableScheduler { get; set; } = true;
 
-    /// <summary>Daily sync times, local to <see cref="TimeZone"/>, "HH:mm". At most <see cref="MaxUnattendedCallsPerDay"/> entries.</summary>
-    public string[] SyncSlots { get; set; } = ["06:30", "11:30", "16:30", "21:30"];
+    /// <summary>
+    /// Daily sync times, local to <see cref="TimeZone"/>, "HH:mm". At most <see cref="MaxUnattendedCallsPerDay"/> entries.
+    /// Null (the default) means 06:30, 11:30, 16:30 and 21:30. It is deliberately not pre-filled: the configuration
+    /// binder appends to a pre-filled array instead of replacing it, which would double the slots.
+    /// </summary>
+    public string[]? SyncSlots { get; set; }
+
+    internal static readonly string[] DefaultSyncSlots = ["06:30", "11:30", "16:30", "21:30"];
+
+    internal string[] EffectiveSyncSlots => SyncSlots ?? DefaultSyncSlots;
 
     /// <summary>IANA time zone id used for slots and the daily quota day boundary.</summary>
     public string TimeZone { get; set; } = "Europe/Copenhagen";
@@ -100,8 +108,9 @@ public sealed class BankSyncOptions
         if (string.IsNullOrWhiteSpace(PrivateKeyPath) && string.IsNullOrWhiteSpace(PrivateKeyPem)) throw new BankSyncConfigurationException($"{nameof(PrivateKeyPath)} or {nameof(PrivateKeyPem)} is required.");
         if (string.IsNullOrWhiteSpace(RedirectUrl)) throw new BankSyncConfigurationException($"{nameof(RedirectUrl)} is required.");
         if (JwtLifetime <= TimeSpan.Zero || JwtLifetime > TimeSpan.FromHours(24)) throw new BankSyncConfigurationException($"{nameof(JwtLifetime)} must be between 0 and 24 hours.");
-        if (SyncSlots.Length > MaxUnattendedCallsPerDay) throw new BankSyncConfigurationException($"{nameof(SyncSlots)} has {SyncSlots.Length} entries but {nameof(MaxUnattendedCallsPerDay)} is {MaxUnattendedCallsPerDay}.");
-        foreach (var s in SyncSlots)
+        var slots = EffectiveSyncSlots;
+        if (slots.Length > MaxUnattendedCallsPerDay) throw new BankSyncConfigurationException($"{nameof(SyncSlots)} has {slots.Length} entries but {nameof(MaxUnattendedCallsPerDay)} is {MaxUnattendedCallsPerDay}.");
+        foreach (var s in slots)
             if (!TimeOnly.TryParseExact(s, "HH:mm", out _)) throw new BankSyncConfigurationException($"Sync slot '{s}' is not in HH:mm format.");
         try { TimeZoneInfo.FindSystemTimeZoneById(TimeZone); }
         catch (Exception ex) { throw new BankSyncConfigurationException($"Unknown time zone '{TimeZone}'.", ex); }

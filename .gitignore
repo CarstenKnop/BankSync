@@ -5,6 +5,8 @@
 *.p12
 *.pfx
 config.local.json
+# Local settings variants (appsettings.json itself is tracked and must stay free of secrets)
+appsettings.*.json
 .env
 .env.*
 
