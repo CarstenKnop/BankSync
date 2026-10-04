@@ -143,9 +143,14 @@ every read method. `samples/BankSync.DemoApp` is a runnable version:
 ```bash
 cd samples/BankSync.DemoApp
 dotnet user-secrets set BankSync:ApplicationId <sandbox app id>
-dotnet user-secrets set BankSync:PrivateKeyPath C:\path\to\sandbox.pem
+dotnet user-secrets set BankSync:PrivateKeyPath C:\Users\<you>\secrets\sandbox.pem
+dotnet user-secrets set BankSync:DatabasePath C:\Users\<you>\banksync-data\banksync.db
 dotnet run
 ```
+
+Settings, key and database all live outside the repository, so nothing
+personal can be committed by accident. The demo has no login: run it on
+localhost only. Details in [samples/BankSync.DemoApp/README.md](samples/BankSync.DemoApp/README.md).
 
 ## Quick start: the documentation
 
