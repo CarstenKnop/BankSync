@@ -27,7 +27,7 @@ transactions, so no real data is involved anywhere.
    `C:\Users\<you>\secrets\`:
 
    ```bash
-   openssl genrsa -out sandbox.pem 2048
+   openssl genrsa -out sandbox.pem 4096
    openssl req -new -x509 -days 365 -key sandbox.pem -out sandbox.crt -subj "/CN=banksync-sandbox"
    ```
 
