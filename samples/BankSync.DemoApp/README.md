@@ -31,8 +31,15 @@ transactions, so no real data is involved anywhere.
    openssl req -new -x509 -days 365 -key sandbox.pem -out sandbox.crt -subj "/CN=banksync-sandbox"
    ```
 
+   On Windows, `openssl` is usually not on the PowerShell PATH. Git for
+   Windows includes it; add it for the current session first:
+
+   ```powershell
+   $env:Path += ";C:\Program Files\Git\usr\bin"
+   ```
+
    Alternatively let the control panel generate the key in the browser and
-   save the downloaded `.pem` there.
+   save the downloaded `.pem` there; then no `openssl` is needed.
 2. **Register the application** at <https://enablebanking.com/cp>:
    environment **Sandbox**, upload `sandbox.crt`, and add the redirect URL
    `https://localhost:5001/callback`. Note the application id.
